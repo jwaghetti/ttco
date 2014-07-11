@@ -1,0 +1,85 @@
+#!/bin/bash
+
+###########################################################################
+#                    ttco - ttco tracks Correios objects
+#
+# Utility to track Correios (Brazilian post office) objects.
+#
+# Usage:
+# 
+# ttco [tracking_file]
+# 
+# if tracking file is not present, reads tracking numbers from default
+# file specified on user configuration.
+#
+# Tracking file is composed by lines with one tracking number or
+# multiple tracking numbers semicolon separated. Spaces are ignored.
+# Double slashes (//) begin a comment block that ends at new line.
+#
+# Comments are not mandatory. A tracking number is not
+# mandatory (a line can be empty or only with a comment).
+#
+######
+# 
+# Examples of valid lines:
+# 
+# trackingno0 // this is a comment for trackingno0
+# trackingno1; trackingno2 // comment for 1 and 2
+# t ra cki ngno3;trackingno4 // comment for 3 and 4 (spaces ignored)
+# 
+#####
+#
+# Example of invalid lines
+# trackingno0 trackingno1 // 0 and 1 will be parsed together
+#
+#
+#####
+#
+# Copyright 2014 Jean Waghetti.
+#
+# This work is free. You can redistribute it and/or modify it under the
+# terms of the Do What The Fuck You Want To Public License, Version 2,
+# as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+#
+
+##################################################
+#### USER CONFIGURATION 
+
+SELECTED_BROWSER=firefox
+DEFAULT_TRACKING_FILE="$HOME/.tracking"
+
+##################################################
+##### END OF USER CONFIGURATION
+
+URL_TRACKING_CORREIOS="http://websro.correios.com.br/sro_bin/txect01$.Inexistente?P_LINGUA=001&P_TIPO=002&P_COD_LIS="
+
+if [[ -z $1 ]] ; then
+	tracking_file="$DEFAULT_TRACKING_FILE"
+else
+	tracking_file="$1"
+fi
+
+echo
+echo "#########################"
+echo "#### Tracking Numbers ###"
+echo "#########################"
+echo
+
+cat "$tracking_file"
+
+echo
+echo "#########################"
+echo
+
+
+# removing comments and empty lines from tracking file.
+tracking_numbers=`cat "$tracking_file" | sed -e 's;'//.*$';;' -e 's/ //g ' -e 's/^$//'`
+
+echo $tracking_numbers
+
+url_with_tracking=$URL_TRACKING_CORREIOS
+for track in $tracking_numbers; do
+	url_with_tracking="${url_with_tracking};${track}"
+done
+
+`$SELECTED_BROWSER $url_with_tracking`
